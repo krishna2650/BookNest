@@ -1,0 +1,120 @@
+<% layout("/layouts/boilerplate") %>
+
+<style>
+    .host-hero {
+        background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+        border-radius: 1.5rem;
+        border: 1px solid #fee2e2;
+        padding: 3.5rem 2rem;
+    }
+    .feature-card {
+        border-radius: 1rem;
+        border: 1px solid #ebebeb;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .feature-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+    }
+    .icon-box {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #fee2e2;
+        color: #fe424d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="row mt-4 mb-5">
+    <div class="col-lg-10 offset-lg-1">
+        <!-- Hero Section -->
+        <div class="host-hero text-center mb-5">
+            <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill fw-semibold mb-3">
+                <i class="fa-solid fa-house-chimney me-1"></i> Hosting on BookNest
+            </span>
+            <h1 class="display-5 fw-bold mb-3">Become a host on BookNest</h1>
+            <p class="lead text-muted col-lg-8 mx-auto mb-4">
+                Share your home, villa, cabin, or apartment with travelers from around the world. Join thousands of hosts earning extra income with complete peace of mind.
+            </p>
+            <form action="/host/become" method="POST" class="d-inline-block">
+                <button type="submit" class="btn btn-danger add-btn px-5 py-3 fw-bold fs-5 shadow" style="border-radius: 30px;">
+                    Get started &bull; Become a host
+                </button>
+            </form>
+            <p class="text-muted small mt-2 mb-0">
+                It only takes a click. You can still use your account to book stays as a guest.
+            </p>
+        </div>
+
+        <!-- 3 Feature Pillars -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="card h-100 p-4 feature-card">
+                    <div class="icon-box">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                    <h5 class="fw-bold">You're in control</h5>
+                    <p class="text-muted small mb-0">
+                        Set your own nightly prices, determine availability, and choose house rules that fit your schedule and lifestyle.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 p-4 feature-card">
+                    <div class="icon-box">
+                        <i class="fa-solid fa-earth-americas"></i>
+                    </div>
+                    <h5 class="fw-bold">Worldwide reach</h5>
+                    <p class="text-muted small mb-0">
+                        Our worldwide destination search connects your listing with verified travelers exploring your city or region.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 p-4 feature-card">
+                    <div class="icon-box">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <h5 class="fw-bold">Dedicated host tools</h5>
+                    <p class="text-muted small mb-0">
+                        Access your private Host Dashboard to manage bookings, track earnings, and review upcoming guest check-ins.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hosting Standards & Responsibilities -->
+        <div class="card p-4 p-md-5 border-0 shadow-sm" style="border-radius: 1rem; background-color: #fafafa;">
+            <div class="row align-items-center">
+                <div class="col-md-7">
+                    <h4 class="fw-bold mb-3">Hosting standards on BookNest</h4>
+                    <p class="text-muted small mb-2">
+                        <i class="fa-solid fa-circle-check text-success me-2"></i>
+                        <strong>Accurate listings:</strong> Provide authentic photos, amenities, and location details for your guests.
+                    </p>
+                    <p class="text-muted small mb-2">
+                        <i class="fa-solid fa-circle-check text-success me-2"></i>
+                        <strong>Cleanliness & safety:</strong> Maintain clean spaces and ensure all essential safety features are ready.
+                    </p>
+                    <p class="text-muted small mb-2">
+                        <i class="fa-solid fa-circle-check text-success me-2"></i>
+                        <strong>Responsive communication:</strong> Respond promptly to reservation requests and guest inquiries.
+                    </p>
+                </div>
+                <div class="col-md-5 text-md-end mt-4 mt-md-0">
+                    <form action="/host/become" method="POST">
+                        <button type="submit" class="btn btn-outline-danger px-4 py-2 fw-semibold" style="border-radius: 25px;">
+                            Activate host status
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

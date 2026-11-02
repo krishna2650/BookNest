@@ -1,0 +1,75 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="row mt-4 mb-5">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold mb-1"><i class="fa-solid fa-heart text-danger me-2"></i>My Wishlist</h2>
+                <p class="text-muted mb-0">Saved properties and places you love (<%= listings.length %>)</p>
+            </div>
+            <a href="/listings" class="btn btn-outline-dark" style="border-radius: 25px;">
+                <i class="fa-solid fa-compass me-1"></i> Explore More
+            </a>
+        </div>
+
+        <% if (listings.length === 0) { %>
+            <div class="text-center py-5 my-4 border rounded bg-light">
+                <i class="fa-regular fa-heart mb-3" style="font-size: 3.5rem; color: #fe424d;"></i>
+                <h5>Your wishlist is empty</h5>
+                <p class="text-muted col-md-6 mx-auto">
+                    As you search BookNest, tap the heart icon on any property to save your favorite stays here.
+                </p>
+                <a href="/listings" class="btn btn-danger add-btn px-4 py-2 mt-2" style="border-radius: 25px;">
+                    Start Exploring
+                </a>
+            </div>
+        <% } else { %>
+            <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
+                <% for (let listing of listings) { %>
+                    <div class="col listing-card mb-4" id="wishlist-item-<%= listing._id %>" style="position: relative;">
+                        <button class="wishlist-btn-page" onclick="removeFromWishlist(event, '<%= listing._id %>')" title="Remove from wishlist" style="position: absolute; top: 1rem; right: 1.5rem; background: transparent; border: none; z-index: 5; font-size: 1.4rem; cursor: pointer;">
+                            <i class="fa-solid fa-heart" style="color: #fe424d;"></i>
+                        </button>
+
+                        <a href="/listings/<%= listing._id %>" class="listing-link">
+                            <img src="<%= listing.image ? listing.image.url : '' %>" 
+                                 class="card-img-top" 
+                                 alt="<%= listing.title %>"
+                                 style="height: 20rem; border-radius: 1rem; object-fit: cover;" />
+                            <div class="card-body pt-2">
+                                <p class="card-text mb-0">
+                                    <b><%= listing.title %></b> <br>
+                                    <span class="text-muted small"><%= listing.location %>, <%= listing.country %></span> <br>
+                                    &#8377; <%= listing.price ? listing.price.toLocaleString("en-IN") : 0 %> / night
+                                </p>
+                            </div>
+                        </a>
+                    </div>
+                <% } %>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<script>
+    async function removeFromWishlist(e, id) {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+            const res = await fetch(`/wishlist/${id}/toggle`, { method: "POST" });
+            const data = await res.json();
+            if (data.success && !data.inWishlist) {
+                const elem = document.getElementById(`wishlist-item-${id}`);
+                if (elem) {
+                    elem.style.transition = "opacity 0.25s ease, transform 0.25s ease";
+                    elem.style.opacity = "0";
+                    elem.style.transform = "scale(0.9)";
+                    setTimeout(() => elem.remove(), 250);
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+</script>
+

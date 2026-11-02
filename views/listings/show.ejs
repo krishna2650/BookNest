@@ -1,0 +1,388 @@
+<% layout("/layouts/boilerplate") %>
+
+<% 
+  const todayObj = new Date();
+  const yyyy = todayObj.getFullYear();
+  const mm = String(todayObj.getMonth() + 1).padStart(2, '0');
+  const dd = String(todayObj.getDate()).padStart(2, '0');
+  const todayStr = `${yyyy}-${mm}-${dd}`;
+
+  const tomorrowObj = new Date();
+  tomorrowObj.setDate(tomorrowObj.getDate() + 1);
+  const tYyyy = tomorrowObj.getFullYear();
+  const tMm = String(tomorrowObj.getMonth() + 1).padStart(2, '0');
+  const tDd = String(tomorrowObj.getDate()).padStart(2, '0');
+  const tomorrowStr = `${tYyyy}-${tMm}-${tDd}`;
+%>
+
+<script>
+    window.mapToken = "<%= mapToken %>";
+    const listing = <%- JSON.stringify(listing) %>;
+    const bookedRanges = <%- JSON.stringify(typeof confirmedBookings !== 'undefined' ? confirmedBookings : []) %>;
+</script>
+
+<div class="row mt-3">
+
+    <div class="col-8 offset-3">
+        <h3><%= listing.title %></h3>
+    </div>
+
+    <div class="card col-6 offset-3 show-card listing-card">
+        <img src="<%= listing.image ? listing.image.url : '' %>"
+             class="card-img-top show-img"
+             alt="listing_image">
+
+        <div class="card-body">
+            <p class="card-text">
+                Owned by <i><%= listing.owner ? listing.owner.username : 'Host' %></i>
+            </p>
+            <p class="card-text"><%= listing.description %></p>
+            <p class="card-text">
+                &#8377; <%= listing.price ? listing.price.toLocaleString("en-IN") : '0' %> / night
+            </p>
+            <p class="card-text"><%= listing.location %></p>
+            <p class="card-text"><%= listing.country %></p>
+        </div>
+    </div>
+
+    <% if (currUser && listing.owner && listing.owner._id.equals(currUser._id)) { %>
+        <div class="btns col-6 offset-3 mb-3">
+            <a href="/listings/<%= listing._id %>/edit"
+               class="btn btn-dark edit-btn me-3">Edit</a>
+
+            <form method="POST"
+                  action="/listings/<%= listing._id %>?_method=DELETE"
+                  style="display: inline;">
+                <button class="btn btn-dark">Delete</button>
+            </form>
+        </div>
+
+        <!-- Owner Reservations Dashboard -->
+        <div class="col-6 offset-3 mb-4">
+            <div class="card p-3 shadow-sm border-0" style="border-radius: 1rem; background: #fdfdfd; border: 1px solid #e2e8f0 !important;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fa-solid fa-clipboard-user text-danger me-2"></i>Guest Reservations
+                    </h5>
+                    <span class="badge bg-dark rounded-pill px-3 py-2">
+                        <%= typeof ownerBookings !== 'undefined' ? ownerBookings.length : 0 %> <%= (typeof ownerBookings !== 'undefined' && ownerBookings.length === 1) ? 'Booking' : 'Bookings' %>
+                    </span>
+                </div>
+
+                <% if (typeof ownerBookings !== 'undefined' && ownerBookings.length > 0) { %>
+                    <div class="list-group list-group-flush">
+                        <% for (let b of ownerBookings) { %>
+                            <div class="list-group-item px-0 py-3 bg-transparent">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <div>
+                                        <strong>@<%= b.user ? b.user.username : 'Guest' %></strong>
+                                        <span class="text-muted small ms-1">(<%= b.user ? b.user.email : '' %>)</span>
+                                    </div>
+                                    <span class="badge <%= b.status === 'confirmed' ? 'bg-success' : 'bg-secondary' %> text-uppercase">
+                                        <%= b.status %>
+                                    </span>
+                                </div>
+                                <div class="text-muted small mb-1">
+                                    <i class="fa-regular fa-calendar me-1"></i>
+                                    <%= new Date(b.checkIn).toLocaleDateString("en-IN", { month: 'short', day: 'numeric', year: 'numeric' }) %> &ndash; 
+                                    <%= new Date(b.checkOut).toLocaleDateString("en-IN", { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                                    &bull; <%= b.nights %> <%= b.nights === 1 ? 'night' : 'nights' %>
+                                    &bull; <%= b.guests %> <%= b.guests === 1 ? 'guest' : 'guests' %>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <small class="text-muted">Ref: <strong><%= b.bookingReference %></strong></small>
+                                    <span class="fw-bold text-danger">&#8377; <%= b.totalPrice.toLocaleString("en-IN") %></span>
+                                </div>
+                            </div>
+                        <% } %>
+                    </div>
+                <% } else { %>
+                    <p class="text-muted small mb-0 py-2">
+                        <i class="fa-solid fa-info-circle me-1"></i> No guest reservations yet for this property. When guests book, their reservations and details will appear here.
+                    </p>
+                <% } %>
+            </div>
+        </div>
+    <% } %>
+
+    <!-- Booking Reservation Section (for travelers) -->
+    <div class="col-6 offset-3 mb-4">
+        <div class="card p-3 shadow-sm" style="border-radius: 1rem; border: 1px solid #ebebeb;">
+            <div class="d-flex justify-content-between align-items-baseline mb-3">
+                <div>
+                    <span class="fs-4 fw-bold">&#8377; <%= listing.price ? listing.price.toLocaleString("en-IN") : '0' %></span>
+                    <span class="text-muted"> / night</span>
+                </div>
+                <span class="badge bg-light text-dark border">
+                    <i class="fa-solid fa-shield-halved text-success me-1"></i> Best Price Guarantee
+                </span>
+            </div>
+
+            <form action="/listings/<%= listing._id %>/bookings" method="POST" id="bookingForm">
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <label for="checkInInput" class="form-label small fw-bold">CHECK-IN</label>
+                        <input type="date" 
+                               class="form-control" 
+                               name="booking[checkIn]" 
+                               id="checkInInput" 
+                               required 
+                               min="<%= todayStr %>">
+                    </div>
+                    <div class="col-6">
+                        <label for="checkOutInput" class="form-label small fw-bold">CHECK-OUT</label>
+                        <input type="date" 
+                               class="form-control" 
+                               name="booking[checkOut]" 
+                               id="checkOutInput" 
+                               required 
+                               min="<%= tomorrowStr %>">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="guestsInput" class="form-label small fw-bold">GUESTS</label>
+                    <input type="number" 
+                           class="form-control" 
+                           name="booking[guests]" 
+                           id="guestsInput" 
+                           value="1" 
+                           min="1" 
+                           max="16" 
+                           required>
+                </div>
+
+                <!-- Availability Warning -->
+                <div id="availabilityAlert" class="alert alert-danger py-2 small mb-3" style="display: none;"></div>
+
+                <!-- Price Calculation Breakdown -->
+                <div id="pricingBreakdown" class="mb-3" style="display: none;">
+                    <hr>
+                    <div class="d-flex justify-content-between text-muted mb-1 small">
+                        <span id="nightlyCalcLabel">&#8377; <%= listing.price ? listing.price.toLocaleString("en-IN") : 0 %> x 0 nights</span>
+                        <span id="basePriceLabel">&#8377; 0</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted mb-1 small">
+                        <span>GST / Taxes (+18%)</span>
+                        <span id="taxLabel">&#8377; 0</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold">
+                        <span>Total amount</span>
+                        <span id="totalPriceLabel">&#8377; 0</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-danger w-100 add-btn py-2 fw-semibold" type="submit" id="reserveBtn">
+                    Reserve
+                </button>
+                <p class="text-center text-muted small mt-2 mb-0">
+                    You won't be charged yet &bull; Free cancellation before check-in
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Review Form -->
+    <div class="col-8 offset-3 mb-3">
+        <hr>
+
+        <% if (currUser) { %>
+            <h4>Leave a Review</h4>
+
+            <form action="/listings/<%= listing._id %>/reviews"
+                  method="POST"
+                  novalidate
+                  class="needs-validation">
+
+                <div class="mb-3 mt-3">
+                    <label for="rating" class="form-label">Rating</label>
+
+                    <fieldset class="starability-slot">
+                        <input type="radio" id="no-rate"
+                                class="input-no-rate"
+                                name="review[rating]" value="1"
+                                aria-label="No rating.">
+
+                        <input type="radio" id="first-rate1"
+                                name="review[rating]" value="1">
+                        <label for="first-rate1" title="Terrible">1 star</label>
+
+                        <input type="radio" id="first-rate2"
+                                name="review[rating]" value="2">
+                        <label for="first-rate2" title="Not good">2 stars</label>
+
+                        <input type="radio" id="first-rate3"
+                                name="review[rating]" value="3">
+                        <label for="first-rate3" title="Average">3 stars</label>
+
+                        <input type="radio" id="first-rate4"
+                                name="review[rating]" value="4">
+                        <label for="first-rate4" title="Very good">4 stars</label>
+
+                        <input type="radio" id="first-rate5"
+                                name="review[rating]" value="5">
+                        <label for="first-rate5" title="Amazing">5 stars</label>
+                    </fieldset>
+                </div>
+
+                <div class="mb-3 mt-3">
+                    <label for="comment" class="form-label">Comments</label>
+
+                    <textarea name="review[comment]"
+                              id="comment"
+                              cols="30"
+                              rows="5"
+                              class="form-control"
+                              required></textarea>
+
+                    <div class="invalid-feedback">
+                        Please add some comments for review
+                    </div>
+                </div>
+
+                <button class="btn btn-outline-dark">Submit</button>
+            </form>
+
+            <hr>
+        <% } %>
+
+        <!-- All Reviews -->
+        <% if (listing.reviews && listing.reviews.length > 0) { %>
+            <div class="row">
+                <p><b>All Reviews</b></p>
+
+                <% for (let review of listing.reviews) { %>
+                    <div class="card col-5 ms-3 mb-3">
+                        <div class="card-body">
+
+                            <h5 class="card-title">
+                                @<%= review.author ? review.author.username : 'User' %>
+                            </h5>
+
+                            <p class="starability-result card-text"
+                               data-rating="<%= review.rating %>"></p>
+
+                            <p class="card-text">
+                                <%= review.comment %>
+                            </p>
+
+                            <% if (
+                                currUser &&
+                                review.author &&
+                                review.author._id.equals(currUser._id)
+                            ) { %>
+                                <form class="mb-3"
+                                      method="POST"
+                                      action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE">
+                                    <button class="btn btn-sm btn-dark">
+                                        Delete
+                                    </button>
+                                </form>
+                            <% } %>
+
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        <% } %>
+    </div>
+
+    <!-- Map Section -->
+    <div class="col-8 offset-3 mb-3">
+        <h3>Where you'll be staying</h3>
+        <div id="map"></div>
+    </div>
+   
+</div>
+
+<script src="/js/map.js"></script>
+
+<script>
+    (() => {
+        const checkIn = document.getElementById("checkInInput");
+        const checkOut = document.getElementById("checkOutInput");
+        const pricingBreakdown = document.getElementById("pricingBreakdown");
+        const nightlyCalcLabel = document.getElementById("nightlyCalcLabel");
+        const basePriceLabel = document.getElementById("basePriceLabel");
+        const taxLabel = document.getElementById("taxLabel");
+        const totalPriceLabel = document.getElementById("totalPriceLabel");
+        const reserveBtn = document.getElementById("reserveBtn");
+        const availabilityAlert = document.getElementById("availabilityAlert");
+
+        const nightlyPrice = Number(listing.price) || 0;
+
+        function updateBookingDetails() {
+            availabilityAlert.style.display = "none";
+            reserveBtn.disabled = false;
+
+            if (!checkIn.value || !checkOut.value) {
+                pricingBreakdown.style.display = "none";
+                return;
+            }
+
+            const inDate = new Date(checkIn.value);
+            const outDate = new Date(checkOut.value);
+
+            if (outDate <= inDate) {
+                availabilityAlert.innerText = "Check-out date must be after check-in date.";
+                availabilityAlert.style.display = "block";
+                pricingBreakdown.style.display = "none";
+                reserveBtn.disabled = true;
+                return;
+            }
+
+            // Check availability against bookedRanges
+            if (Array.isArray(bookedRanges) && bookedRanges.length > 0) {
+                const isOverlapping = bookedRanges.some((range) => {
+                    const bIn = new Date(range.checkIn);
+                    const bOut = new Date(range.checkOut);
+                    return inDate < bOut && outDate > bIn;
+                });
+
+                if (isOverlapping) {
+                    availabilityAlert.innerText = "The selected dates overlap with an existing reservation. Please choose different dates.";
+                    availabilityAlert.style.display = "block";
+                    pricingBreakdown.style.display = "none";
+                    reserveBtn.disabled = true;
+                    return;
+                }
+            }
+
+            const msPerDay = 1000 * 60 * 60 * 24;
+            const nights = Math.round((outDate - inDate) / msPerDay);
+
+            if (nights >= 1) {
+                const base = nightlyPrice * nights;
+                const tax = Math.round(base * 0.18);
+                const total = base + tax;
+
+                nightlyCalcLabel.innerText = `₹ ${nightlyPrice.toLocaleString('en-IN')} x ${nights} night${nights > 1 ? 's' : ''}`;
+                basePriceLabel.innerText = `₹ ${base.toLocaleString('en-IN')}`;
+                taxLabel.innerText = `₹ ${tax.toLocaleString('en-IN')}`;
+                totalPriceLabel.innerText = `₹ ${total.toLocaleString('en-IN')}`;
+
+                pricingBreakdown.style.display = "block";
+            } else {
+                pricingBreakdown.style.display = "none";
+            }
+        }
+
+        checkIn.addEventListener("change", () => {
+            if (checkIn.value) {
+                const nextDay = new Date(checkIn.value);
+                nextDay.setDate(nextDay.getDate() + 1);
+                const yyyy = nextDay.getFullYear();
+                const mm = String(nextDay.getMonth() + 1).padStart(2, '0');
+                const dd = String(nextDay.getDate()).padStart(2, '0');
+                checkOut.min = `${yyyy}-${mm}-${dd}`;
+                if (checkOut.value && new Date(checkOut.value) <= new Date(checkIn.value)) {
+                    checkOut.value = `${yyyy}-${mm}-${dd}`;
+                }
+            }
+            updateBookingDetails();
+        });
+
+        checkOut.addEventListener("change", updateBookingDetails);
+    })();
+</script>

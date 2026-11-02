@@ -1,0 +1,313 @@
+<% layout("/layouts/boilerplate") %> 
+    <style>
+        #filters {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter {
+            text-align: center;
+            margin: 1rem;
+            margin-top: 2rem;
+            opacity: 0.7;
+            text-decoration: none !important;
+            color: inherit !important;
+            padding-bottom: 0.35rem;
+            border-bottom: 2px solid transparent;
+            transition: opacity 0.15s ease, border-bottom 0.15s ease;
+        }
+
+        .filter:hover {
+            opacity: 1;
+            cursor: pointer;
+            border-bottom: 2px solid #717171;
+        }
+
+        .filter.active-filter {
+            opacity: 1 !important;
+            font-weight: 600;
+            border-bottom: 2px solid #222222 !important;
+        }
+
+        .filter p {
+            font-size: 0.8rem;
+            margin-bottom: 0;
+            margin-top: 0.25rem;
+        }
+
+        .tax-info {
+            display: none;
+        }
+
+        .tax-toggle {
+            border: 1px solid black;
+            border-radius: 1rem;
+            height: 3.25rem;
+            padding: 1rem;
+            margin-left: 2rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-modal-btn {
+            border: 1px solid black;
+            border-radius: 1rem;
+            height: 3.25rem;
+            padding: 0.5rem 1.25rem;
+            margin-left: 1rem;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            font-weight: 500;
+            background: white;
+            color: #222;
+        }
+        .filter-modal-btn:hover {
+            background: #f7f7f7;
+            color: black;
+            border-color: black;
+        }
+
+        .wishlist-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 1.5rem;
+            background: transparent;
+            border: none;
+            z-index: 5;
+            font-size: 1.35rem;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+        .wishlist-btn:hover {
+            transform: scale(1.15);
+        }
+        .heart-shadow {
+            filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.75));
+        }
+    </style>
+
+    <% 
+      const categoriesList = [
+        { name: "Trending", icon: "fa-solid fa-fire" },
+        { name: "Rooms", icon: "fa-solid fa-bed" },
+        { name: "Iconic cities", icon: "fa-solid fa-mountain-city" },
+        { name: "Mountains", icon: "fa-solid fa-mountain" },
+        { name: "Castles", icon: "fa-brands fa-fort-awesome" },
+        { name: "Amazing Pools", icon: "fa-solid fa-person-swimming" },
+        { name: "Camping", icon: "fa-solid fa-campground" },
+        { name: "Farms", icon: "fa-brands fa-cow" },
+        { name: "Arctic", icon: "fa-regular fa-snowflake" },
+        { name: "Domes", icon: "fa-solid fa-igloo" },
+        { name: "Boats", icon: "fa-solid fa-ship" }
+      ];
+      const activeCat = typeof selectedCategory !== 'undefined' ? selectedCategory : '';
+      const currentQ = typeof searchQuery !== 'undefined' ? searchQuery : '';
+      const hasPriceFilter = (typeof minPrice !== 'undefined' && minPrice) || (typeof maxPrice !== 'undefined' && maxPrice);
+      const hasGuestFilter = (typeof guests !== 'undefined' && guests);
+    %>
+
+    <div id="filters">
+        <% for (let cat of categoriesList) { 
+             const isSelected = (activeCat === cat.name);
+             const href = isSelected 
+               ? (currentQ ? `/listings?q=${encodeURIComponent(currentQ)}` : '/listings')
+               : (currentQ ? `/listings?category=${encodeURIComponent(cat.name)}&q=${encodeURIComponent(currentQ)}` : `/listings?category=${encodeURIComponent(cat.name)}`);
+        %>
+            <a href="<%= href %>" class="filter <%= isSelected ? 'active-filter' : '' %>">
+                <div><i class="<%= cat.icon %>"></i></div>
+                <p><%= cat.name %></p>
+            </a>
+        <% } %>
+
+        <div class="tax-toggle">
+            <div class="form-check-reverse form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">
+            <label class="form-check-label" for="flexSwitchCheckDefault">Display total after taxes</label>
+            </div>
+        </div>
+
+        <button type="button" class="btn filter-modal-btn" data-bs-toggle="modal" data-bs-target="#filterModal">
+            <i class="fa-solid fa-sliders me-2"></i>Filters
+            <% if (hasPriceFilter || hasGuestFilter) { %>
+                <span class="badge bg-danger rounded-pill ms-1">&bull;</span>
+            <% } %>
+        </button>
+    </div>
+
+    <% if (activeCat || currentQ || hasPriceFilter || hasGuestFilter) { %>
+        <div class="d-flex justify-content-between align-items-center mt-2 mb-3">
+            <p class="text-muted mb-0 small">
+                Showing <strong><%= allListings.length %></strong> <%= allListings.length === 1 ? 'property' : 'properties' %>
+                <% if (activeCat) { %> in <strong><%= activeCat %></strong><% } %>
+                <% if (currentQ) { %> matching "<strong><%= currentQ %></strong>"<% } %>
+                <% if (hasPriceFilter) { %>
+                    &bull; Price: 
+                    <%= minPrice ? '₹' + minPrice : '₹0' %> &ndash; <%= maxPrice ? '₹' + maxPrice : 'Any' %>
+                <% } %>
+                <% if (hasGuestFilter) { %>
+                    &bull; <%= guests %>+ guests
+                <% } %>
+            </p>
+            <a href="/listings" class="btn btn-sm btn-outline-secondary" style="border-radius: 20px;">
+                <i class="fa-solid fa-xmark me-1"></i> Clear all filters
+            </a>
+        </div>
+    <% } %>
+
+    <% if (allListings.length === 0) { %>
+        <div class="col-12 text-center my-5 py-5">
+            <i class="fa-solid fa-magnifying-glass mb-3" style="font-size: 3rem; color: #fe424d;"></i>
+            <h4>No properties found</h4>
+            <p class="text-muted">
+                We couldn't find any listings matching your current filter criteria. Try adjusting your search, price, or category.
+            </p>
+            <a href="/listings" class="btn btn-outline-danger mt-2" style="border-radius: 20px;">View all properties</a>
+        </div>
+    <% } else { %>
+        <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
+            <% for(let listing of allListings) { %>
+             <a href="/listings/<%= listing._id %>" class="listing-link">
+                <div class="card col listing-card" style="position: relative;">
+                    <button class="wishlist-btn" 
+                            data-id="<%= listing._id %>" 
+                            onclick="toggleWishlist(event, '<%= listing._id %>')" 
+                            title="Save to wishlist">
+                        <% if (typeof userWishlistIds !== 'undefined' && userWishlistIds.includes(listing._id.toString())) { %>
+                            <i class="fa-solid fa-heart" style="color: #fe424d;"></i>
+                        <% } else { %>
+                            <i class="fa-regular fa-heart text-white heart-shadow"></i>
+                        <% } %>
+                    </button>
+
+                    <img 
+                        src="<%= listing.image ? listing.image.url : '' %>" 
+                        class="card-img-top" alt="listing_image"
+                         style="height: 20rem"
+                         />
+                         <div class="card-img-overlay"></div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                <b><%= listing.title %> </b> <br>
+                                &#8377; <%= listing.price ? listing.price.toLocaleString("en-IN") : '0' %> / night 
+                                <i class="tax-info"> &nbsp; &nbsp; +18% GST </i>
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            <% } %>
+        </div>
+    <% } %>
+
+    <!-- Filter Modal (Price Range & Guests) -->
+    <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 1.25rem;">
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold" id="filterModalLabel">Filters</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="/listings" method="GET" id="priceFilterForm">
+                    <% if (activeCat) { %>
+                        <input type="hidden" name="category" value="<%= activeCat %>">
+                    <% } %>
+                    <% if (currentQ) { %>
+                        <input type="hidden" name="q" value="<%= currentQ %>">
+                    <% } %>
+                    <div class="modal-body p-4">
+                        <h6 class="fw-bold mb-3">Price range (per night)</h6>
+                        <div class="row g-2 mb-4">
+                            <div class="col-6">
+                                <label class="form-label small text-muted">Minimum price</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">&#8377;</span>
+                                    <input type="number" 
+                                           name="minPrice" 
+                                           class="form-control" 
+                                           placeholder="0" 
+                                           min="0"
+                                           value="<%= typeof minPrice !== 'undefined' && minPrice ? minPrice : '' %>">
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small text-muted">Maximum price</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">&#8377;</span>
+                                    <input type="number" 
+                                           name="maxPrice" 
+                                           class="form-control" 
+                                           placeholder="10000+" 
+                                           min="0"
+                                           value="<%= typeof maxPrice !== 'undefined' && maxPrice ? maxPrice : '' %>">
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <h6 class="fw-bold mb-3">Guests</h6>
+                        <div class="mb-2">
+                            <label class="form-label small text-muted">Minimum guests</label>
+                            <input type="number" 
+                                   name="guests" 
+                                   class="form-control" 
+                                   placeholder="Any" 
+                                   min="1" 
+                                   max="16"
+                                   value="<%= typeof guests !== 'undefined' && guests ? guests : '' %>">
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top d-flex justify-content-between p-3">
+                        <a href="/listings<%= (activeCat || currentQ) ? ('?' + (activeCat ? 'category=' + encodeURIComponent(activeCat) : '') + (activeCat && currentQ ? '&' : '') + (currentQ ? 'q=' + encodeURIComponent(currentQ) : '')) : '' %>" class="btn btn-outline-secondary" style="border-radius: 20px;">
+                            Clear all
+                        </a>
+                        <button type="submit" class="btn btn-danger add-btn px-4" style="border-radius: 20px;">
+                            Show listings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script> 
+     let taxToggle = document.getElementById("flexSwitchCheckDefault");
+     if (taxToggle) {
+         taxToggle.addEventListener("click", () => {
+            let taxInfo = document.getElementsByClassName("tax-info");
+            for(info of taxInfo) {
+                if(info.style.display !="inline") {
+                    info.style.display = "inline";
+                } else {
+                    info.style.display = "none";
+                }
+            }   
+         });
+     }
+
+     async function toggleWishlist(e, id) {
+         e.preventDefault();
+         e.stopPropagation();
+         try {
+             const res = await fetch(`/wishlist/${id}/toggle`, { method: "POST" });
+             if (res.status === 401) {
+                 window.location.href = "/login";
+                 return;
+             }
+             const data = await res.json();
+             if (data.success) {
+                 const btn = document.querySelector(`.wishlist-btn[data-id="${id}"]`);
+                 if (btn) {
+                     if (data.inWishlist) {
+                         btn.innerHTML = '<i class="fa-solid fa-heart" style="color: #fe424d;"></i>';
+                     } else {
+                         btn.innerHTML = '<i class="fa-regular fa-heart text-white heart-shadow"></i>';
+                     }
+                 }
+             }
+         } catch (err) {
+             console.error("Wishlist error:", err);
+         }
+     }
+     </script>

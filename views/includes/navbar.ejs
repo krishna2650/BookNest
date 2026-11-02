@@ -1,0 +1,189 @@
+<style>
+  .search-btn {
+    background-color: #fe424d;
+    color: #fff;
+    border-radius: 25px;
+    padding: 0 1rem 0 1rem;
+  }
+  .search-btn:hover {
+    background-color: #fe424d;
+    color: #fff;
+  }
+
+  .search-btn i {
+    display: inline;
+    margin-right: 0.5rem;
+  }
+
+  .search-input {
+    border-radius: 25px;
+    padding: 0.5rem 3rem 0.5rem 3rem;
+    font-size: 1rem;
+  }
+
+  .search-wrapper {
+    position: relative;
+  }
+
+  .search-suggestions-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 100%;
+    max-width: 380px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+    border: 1px solid #ebebeb;
+    z-index: 1050;
+    overflow: hidden;
+    display: none;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+
+  .suggestion-item {
+    padding: 0.65rem 1rem;
+    cursor: pointer;
+    font-size: 0.92rem;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: #222222;
+    border-bottom: 1px solid #f4f4f4;
+    transition: background 0.15s ease;
+  }
+
+  .suggestion-item:last-child {
+    border-bottom: none;
+  }
+
+  .suggestion-item:hover {
+    background-color: #f8f9fa;
+    color: #fe424d;
+  }
+
+  .suggestion-item i {
+    color: #fe424d;
+    font-size: 0.85rem;
+  }
+</style>
+
+<nav class="navbar navbar-expand-md bg-body-light border-bottom sticky-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/listings">
+      <i class="fa-regular fa-compass"></i></a>
+    <button
+     class="navbar-toggler" 
+     type="button" data-bs-toggle="collapse"
+      data-bs-target="#navbarNavAltMarkup"
+       >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+      <div class="navbar-nav">
+        <a class="nav-link" href="/listings">Explore</a>
+      </div>
+
+      <div class="navbar-nav ms-auto">
+        <div class="search-wrapper">
+          <form class="d-flex" role="search" action="/listings" method="GET" id="searchForm">
+            <input 
+                class="form-control me-2 search-input"
+                type="search" 
+                name="q"
+                id="searchInput"
+                placeholder="Search destinations" 
+                autocomplete="off"
+                value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>"
+                >
+            <button class="btn search-btn" type="submit">
+              <i class="fa-solid fa-magnifying-glass"></i>Search</button>
+          </form>
+          <div id="searchSuggestions" class="search-suggestions-dropdown"></div>
+        </div>
+      </div>
+
+      <div class="navbar-nav ms-auto">
+        <% if (!currUser || !currUser.isHost) { %>
+          <a class="nav-link" href="/host/become">Become a host</a>
+        <% } else { %>
+          <a class="nav-link" href="/host/dashboard"><b>Host dashboard</b></a>
+        <% } %>
+        <% if(!currUser) {  %>
+        <a class="nav-link" href="/signup"><b>Sign up</b></a>
+        <a class="nav-link" href="/login"><b>Log in </b></a>
+        <% } %>
+        <% if(currUser) { %>
+        <a class="nav-link" href="/wishlist">Wishlist</a>
+        <a class="nav-link" href="/messages">Messages</a>
+        <a class="nav-link" href="/bookings"><b>My Bookings</b></a>
+        <a class="nav-link" href="/logout"><b>Log out</b></a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<script>
+  (() => {
+    const input = document.getElementById('searchInput');
+    const dropdown = document.getElementById('searchSuggestions');
+    const form = document.getElementById('searchForm');
+    let debounceTimer;
+
+    if (!input || !dropdown) return;
+
+    input.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      const query = input.value.trim();
+      if (query.length < 2) {
+        dropdown.style.display = 'none';
+        dropdown.innerHTML = '';
+        return;
+      }
+
+      debounceTimer = setTimeout(async () => {
+        try {
+          const res = await fetch('/listings/search-suggestions?q=' + encodeURIComponent(query));
+          if (!res.ok) return;
+          const suggestions = await res.json();
+          if (suggestions && suggestions.length > 0) {
+            dropdown.innerHTML = suggestions
+              .map(
+                (item) =>
+                  `<div class="suggestion-item"><i class="fa-solid fa-location-dot"></i><span>${item}</span></div>`
+              )
+              .join('');
+            dropdown.style.display = 'block';
+
+            dropdown.querySelectorAll('.suggestion-item').forEach((elem) => {
+              elem.addEventListener('click', () => {
+                input.value = elem.querySelector('span').innerText;
+                dropdown.style.display = 'none';
+                form.submit();
+              });
+            });
+          } else {
+            dropdown.style.display = 'none';
+            dropdown.innerHTML = '';
+          }
+        } catch (e) {
+          dropdown.style.display = 'none';
+        }
+      }, 250);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        dropdown.style.display = 'none';
+      }
+    });
+  })();
+</script>

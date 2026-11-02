@@ -1,0 +1,80 @@
+<% layout("/layouts/boilerplate") %>
+
+<style>
+    .thread-card {
+        border-radius: 1rem;
+        border: 1px solid #ebebeb;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        text-decoration: none !important;
+        color: inherit !important;
+        display: block;
+    }
+    .thread-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+        background-color: #fdfdfd;
+    }
+</style>
+
+<div class="row mt-4 mb-5">
+    <div class="col-lg-8 offset-lg-2">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold mb-1"><i class="fa-regular fa-comments text-danger me-2"></i>Messages</h2>
+                <p class="text-muted mb-0">Direct communication between hosts and guests</p>
+            </div>
+            <a href="/bookings" class="btn btn-outline-dark btn-sm" style="border-radius: 20px;">
+                <i class="fa-solid fa-list me-1"></i> My Bookings
+            </a>
+        </div>
+
+        <% if (threads.length === 0) { %>
+            <div class="text-center py-5 my-4 border rounded bg-light">
+                <i class="fa-regular fa-comment-dots mb-3" style="font-size: 3.5rem; color: #fe424d;"></i>
+                <h5>No messages yet</h5>
+                <p class="text-muted col-md-8 mx-auto">
+                    When you book a stay or host guests, your conversation threads for check-in and trip questions will appear here.
+                </p>
+                <a href="/listings" class="btn btn-danger add-btn px-4 py-2 mt-2" style="border-radius: 25px;">
+                    Explore Stays
+                </a>
+            </div>
+        <% } else { %>
+            <div class="d-flex flex-column gap-3">
+                <% for (let t of threads) { %>
+                    <a href="/messages/<%= t.booking._id %>" class="thread-card p-3 bg-white">
+                        <div class="d-flex align-items-center">
+                            <img src="<%= t.booking.listing && t.booking.listing.image ? t.booking.listing.image.url : '' %>" 
+                                 alt="<%= t.booking.listing ? t.booking.listing.title : 'Property' %>"
+                                 style="width: 70px; height: 70px; border-radius: 12px; object-fit: cover;" 
+                                 class="me-3">
+                            <div class="flex-grow-1 overflow-hidden">
+                                <div class="d-flex justify-content-between align-items-baseline mb-1">
+                                    <h6 class="fw-bold mb-0 text-truncate">
+                                        <%= t.booking.listing ? t.booking.listing.title : 'Property' %>
+                                    </h6>
+                                    <small class="text-muted ms-2">
+                                        <%= new Date(t.lastMessageTime).toLocaleDateString("en-IN", { month: 'short', day: 'numeric' }) %>
+                                    </small>
+                                </div>
+                                <div class="text-muted small mb-1">
+                                    <span class="badge bg-light text-dark border me-1">
+                                        <%= t.isGuest ? 'Host chat' : 'Guest chat' %>
+                                    </span>
+                                    Ref: <strong><%= t.booking.bookingReference %></strong>
+                                </div>
+                                <p class="text-secondary small mb-0 text-truncate">
+                                    <%= t.lastMessage %>
+                                </p>
+                            </div>
+                            <div class="ms-3 text-muted">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </a>
+                <% } %>
+            </div>
+        <% } %>
+    </div>
+</div>
+
