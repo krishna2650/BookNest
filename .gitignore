@@ -12,3 +12,7 @@ node_modules/
 # System files
 .DS_Store
 Thumbs.db
+
+# Local backups
+backup_pre_razorpay/
+.backup_pre_razorpay/

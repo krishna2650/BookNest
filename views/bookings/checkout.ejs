@@ -1,0 +1,168 @@
+<% layout("/layouts/boilerplate") %>
+
+<% 
+  const checkInDate = new Date(booking.checkIn);
+  const checkOutDate = new Date(booking.checkOut);
+%>
+
+<div class="row mt-4 mb-5">
+    <div class="col-12 col-md-10 offset-md-1 col-lg-8 offset-lg-2">
+        <div class="card shadow-sm border-0" style="border-radius: 1rem; overflow: hidden; background: #fff;">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <span class="fw-bold text-muted small"><i class="fa-solid fa-lock text-success me-1"></i> SECURE RAZORPAY CHECKOUT</span>
+                <span class="badge bg-warning text-dark px-3 py-2 text-uppercase">Payment Pending</span>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row">
+                    <!-- Property Info -->
+                    <div class="col-12 col-md-5 mb-4 mb-md-0">
+                        <% if (booking.listing && booking.listing.image) { %>
+                            <img src="<%= booking.listing.image.url %>" 
+                                 alt="<%= booking.listing.title %>" 
+                                 class="img-fluid rounded mb-3" 
+                                 style="height: 200px; width: 100%; object-fit: cover;">
+                        <% } %>
+                        <h4 class="fw-bold"><%= booking.listing ? booking.listing.title : 'Property' %></h4>
+                        <p class="text-muted mb-2">
+                            <i class="fa-solid fa-location-dot me-1 text-danger"></i>
+                            <%= booking.listing ? booking.listing.location : '' %>, <%= booking.listing ? booking.listing.country : '' %>
+                        </p>
+                        <p class="small text-muted mb-0">
+                            Reference: <strong><%= booking.bookingReference %></strong>
+                        </p>
+                    </div>
+
+                    <!-- Price & Payment Actions -->
+                    <div class="col-12 col-md-7 ps-md-4 border-start">
+                        <h5 class="fw-bold mb-3">Trip Summary</h5>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <div class="p-2 border rounded bg-light">
+                                    <small class="text-muted d-block">CHECK-IN</small>
+                                    <strong><%= checkInDate.toLocaleDateString("en-IN", { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) %></strong>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 border rounded bg-light">
+                                    <small class="text-muted d-block">CHECK-OUT</small>
+                                    <strong><%= checkOutDate.toLocaleDateString("en-IN", { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) %></strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="text-muted small mb-3">
+                            <i class="fa-solid fa-user-group me-1"></i> Guests: <strong><%= booking.guests %></strong> &bull;
+                            <i class="fa-solid fa-moon ms-2 me-1"></i> Duration: <strong><%= booking.nights %> <%= booking.nights === 1 ? 'night' : 'nights' %></strong>
+                        </p>
+
+                        <h6 class="fw-bold mb-2">Price Breakdown</h6>
+                        <div class="d-flex justify-content-between text-muted small mb-1">
+                            <span>&#8377; <%= booking.nightlyPrice.toLocaleString("en-IN") %> x <%= booking.nights %> nights</span>
+                            <span>&#8377; <%= booking.basePrice.toLocaleString("en-IN") %></span>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted small mb-2">
+                            <span>Taxes & GST (18%)</span>
+                            <span>&#8377; <%= (booking.tax || 0).toLocaleString("en-IN") %></span>
+                        </div>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between fw-bold fs-5 mb-4">
+                            <span>Total Payable</span>
+                            <span class="text-danger">&#8377; <%= booking.totalPrice.toLocaleString("en-IN") %></span>
+                        </div>
+
+                        <div id="paymentAlert" class="alert alert-danger py-2 small mb-3" style="display: none;"></div>
+
+                        <button id="payNowBtn" class="btn btn-danger w-100 py-3 fw-bold fs-6 mb-2" style="background-color: #fe424d; border-radius: 25px;">
+                            <i class="fa-solid fa-shield-halved me-2"></i> Pay &#8377; <%= booking.totalPrice.toLocaleString("en-IN") %> with Razorpay
+                        </button>
+
+                        <div class="text-center">
+                            <a href="/listings/<%= booking.listing ? booking.listing._id : '' %>" class="text-muted small text-decoration-none">
+                                <i class="fa-solid fa-arrow-left me-1"></i> Back to Property
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer bg-light text-muted small py-3 px-4">
+                <i class="fa-solid fa-lock text-success me-1"></i>
+                <strong>100% Secure Checkout:</strong> Payments are processed via encrypted Razorpay gateway. We accept UPI, Cards, NetBanking and Wallets.
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include("../includes/razorpayModal.ejs") %>
+
+<script>
+    (() => {
+        const payBtn = document.getElementById("payNowBtn");
+        const alertBox = document.getElementById("paymentAlert");
+        const simModalEl = document.getElementById("razorpaySimModal");
+        const simModal = new bootstrap.Modal(simModalEl);
+
+        // Pre-populate modal fields
+        document.getElementById("rzpModalPropTitle").innerText = "<%= booking.listing ? booking.listing.title : 'Property Reservation' %>";
+        document.getElementById("rzpModalRef").innerText = "Ref: <%= booking.bookingReference %>";
+        document.getElementById("rzpModalAmount").innerText = "₹ <%= booking.totalPrice.toLocaleString('en-IN') %>";
+
+        payBtn.addEventListener("click", () => {
+            alertBox.style.display = "none";
+            document.getElementById("rzpSimAlert").style.display = "none";
+            simModal.show();
+        });
+
+        const simPayBtn = document.getElementById("rzpSimPayBtn");
+        const simFailBtn = document.getElementById("rzpSimFailBtn");
+        const simAlert = document.getElementById("rzpSimAlert");
+
+        simPayBtn.addEventListener("click", async () => {
+            simAlert.style.display = "none";
+            simPayBtn.disabled = true;
+            simPayBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing Razorpay Payment...`;
+
+            try {
+                const verifyRes = await fetch("/bookings/<%= booking._id %>/verify-payment", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({
+                        razorpay_order_id: "<%= booking.razorpayOrderId || 'order_test_checkout' %>",
+                        razorpay_payment_id: "pay_test_" + Date.now().toString(36),
+                        razorpay_signature: "simulated_razorpay_success",
+                        isAjax: true
+                    })
+                });
+
+                const result = await verifyRes.json();
+                if (result.success) {
+                    simPayBtn.innerHTML = `<i class="fa-solid fa-circle-check me-2 text-white"></i>Payment Verified!`;
+                    setTimeout(() => {
+                        window.location.href = result.redirectUrl || "/bookings/<%= booking._id %>";
+                    }, 500);
+                } else {
+                    simAlert.innerText = result.message || "Payment verification failed.";
+                    simAlert.style.display = "block";
+                    simPayBtn.disabled = false;
+                    simPayBtn.innerHTML = `<i class="fa-solid fa-lock me-1"></i> Pay Now (Instant Confirmation)`;
+                }
+            } catch (err) {
+                simAlert.innerText = "Network error during verification. Please refresh and check your booking status.";
+                simAlert.style.display = "block";
+                simPayBtn.disabled = false;
+                simPayBtn.innerHTML = `<i class="fa-solid fa-lock me-1"></i> Pay Now (Instant Confirmation)`;
+            }
+        });
+
+        simFailBtn.addEventListener("click", () => {
+            simAlert.innerText = "Payment failed: Card declined / cancelled in test simulation.";
+            simAlert.style.display = "block";
+        });
+    })();
+</script>
+

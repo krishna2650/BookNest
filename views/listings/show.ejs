@@ -17,17 +17,18 @@
 
 <script>
     window.mapToken = "<%= mapToken %>";
+    window.isLoggedInUser = <%= (typeof currUser !== 'undefined' && currUser) ? 'true' : 'false' %>;
     const listing = <%- JSON.stringify(listing) %>;
     const bookedRanges = <%- JSON.stringify(typeof confirmedBookings !== 'undefined' ? confirmedBookings : []) %>;
 </script>
 
 <div class="row mt-3">
 
-    <div class="col-8 offset-3">
-        <h3><%= listing.title %></h3>
+    <div class="col-12 col-md-10 offset-md-1 col-lg-8 offset-lg-2">
+        <h3 class="fw-bold"><%= listing.title %></h3>
     </div>
 
-    <div class="card col-6 offset-3 show-card listing-card">
+    <div class="card col-12 col-md-10 offset-md-1 col-lg-8 offset-lg-2 show-card listing-card">
         <img src="<%= listing.image ? listing.image.url : '' %>"
              class="card-img-top show-img"
              alt="listing_image">
@@ -45,20 +46,20 @@
         </div>
     </div>
 
-    <% if (currUser && listing.owner && listing.owner._id.equals(currUser._id)) { %>
-        <div class="btns col-6 offset-3 mb-3">
+    <% if (typeof currUser !== 'undefined' && currUser && listing.owner && listing.owner._id.equals(currUser._id)) { %>
+        <div class="btns col-12 col-md-10 offset-md-1 col-lg-8 offset-lg-2 mb-3">
             <a href="/listings/<%= listing._id %>/edit"
-               class="btn btn-dark edit-btn me-3">Edit</a>
+               class="btn btn-dark edit-btn me-3" style="border-radius: 20px;">Edit</a>
 
             <form method="POST"
                   action="/listings/<%= listing._id %>?_method=DELETE"
                   style="display: inline;">
-                <button class="btn btn-dark">Delete</button>
+                <button class="btn btn-dark" style="border-radius: 20px;">Delete</button>
             </form>
         </div>
 
         <!-- Owner Reservations Dashboard -->
-        <div class="col-6 offset-3 mb-4">
+        <div class="col-12 col-md-10 offset-md-1 col-lg-8 offset-lg-2 mb-4">
             <div class="card p-3 shadow-sm border-0" style="border-radius: 1rem; background: #fdfdfd; border: 1px solid #e2e8f0 !important;">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="fw-bold mb-0">
@@ -78,9 +79,14 @@
                                         <strong>@<%= b.user ? b.user.username : 'Guest' %></strong>
                                         <span class="text-muted small ms-1">(<%= b.user ? b.user.email : '' %>)</span>
                                     </div>
-                                    <span class="badge <%= b.status === 'confirmed' ? 'bg-success' : 'bg-secondary' %> text-uppercase">
-                                        <%= b.status %>
-                                    </span>
+                                    <div>
+                                        <span class="badge <%= b.status === 'confirmed' ? 'bg-success' : 'bg-secondary' %> text-uppercase">
+                                            <%= b.status %>
+                                        </span>
+                                        <span class="badge <%= b.paymentStatus === 'paid' ? 'bg-success' : 'bg-warning text-dark' %> text-uppercase ms-1">
+                                            <%= b.paymentStatus %>
+                                        </span>
+                                    </div>
                                 </div>
                                 <div class="text-muted small mb-1">
                                     <i class="fa-regular fa-calendar me-1"></i>
@@ -106,8 +112,8 @@
     <% } %>
 
     <!-- Booking Reservation Section (for travelers) -->
-    <div class="col-6 offset-3 mb-4">
-        <div class="card p-3 shadow-sm" style="border-radius: 1rem; border: 1px solid #ebebeb;">
+    <div class="col-12 col-md-10 offset-md-1 col-lg-8 offset-lg-2 mb-4">
+        <div class="card p-3 p-md-4 shadow-sm" style="border-radius: 1rem; border: 1px solid #ebebeb;">
             <div class="d-flex justify-content-between align-items-baseline mb-3">
                 <div>
                     <span class="fs-4 fw-bold">&#8377; <%= listing.price ? listing.price.toLocaleString("en-IN") : '0' %></span>
@@ -174,20 +180,20 @@
                 </div>
 
                 <button class="btn btn-danger w-100 add-btn py-2 fw-semibold" type="submit" id="reserveBtn">
-                    Reserve
+                    <i class="fa-solid fa-lock me-1"></i> Reserve & Pay with Razorpay
                 </button>
                 <p class="text-center text-muted small mt-2 mb-0">
-                    You won't be charged yet &bull; Free cancellation before check-in
+                    <i class="fa-solid fa-shield-halved text-success me-1"></i> Instant Confirmation via Razorpay &bull; Free cancellation
                 </p>
             </form>
         </div>
     </div>
 
     <!-- Review Form -->
-    <div class="col-8 offset-3 mb-3">
+    <div class="col-12 col-md-10 offset-md-1 col-lg-8 offset-lg-2 mb-3">
         <hr>
 
-        <% if (currUser) { %>
+        <% if (typeof currUser !== 'undefined' && currUser) { %>
             <h4>Leave a Review</h4>
 
             <form action="/listings/<%= listing._id %>/reviews"
@@ -228,54 +234,48 @@
 
                 <div class="mb-3 mt-3">
                     <label for="comment" class="form-label">Comments</label>
-
                     <textarea name="review[comment]"
                               id="comment"
                               cols="30"
                               rows="5"
                               class="form-control"
                               required></textarea>
-
                     <div class="invalid-feedback">
                         Please add some comments for review
                     </div>
                 </div>
 
-                <button class="btn btn-outline-dark">Submit</button>
+                <button class="btn btn-outline-dark" style="border-radius: 20px;">Submit</button>
             </form>
-
             <hr>
         <% } %>
 
-        <!-- All Reviews -->
-        <% if (listing.reviews && listing.reviews.length > 0) { %>
+        <% if (listing.reviews.length > 0) { %>
             <div class="row">
                 <p><b>All Reviews</b></p>
-
-                <% for (let review of listing.reviews) { %>
-                    <div class="card col-5 ms-3 mb-3">
+                <% for (review of listing.reviews) { %>
+                    <div class="card col-12 col-md-5 ms-md-3 mb-3">
                         <div class="card-body">
-
                             <h5 class="card-title">
                                 @<%= review.author ? review.author.username : 'User' %>
                             </h5>
 
                             <p class="starability-result card-text"
-                               data-rating="<%= review.rating %>"></p>
+                                data-rating="<%= review.rating %>"></p>
 
                             <p class="card-text">
                                 <%= review.comment %>
                             </p>
 
                             <% if (
-                                currUser &&
+                                typeof currUser !== 'undefined' && currUser &&
                                 review.author &&
                                 review.author._id.equals(currUser._id)
                             ) { %>
                                 <form class="mb-3"
                                       method="POST"
                                       action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE">
-                                    <button class="btn btn-sm btn-dark">
+                                    <button class="btn btn-sm btn-dark" style="border-radius: 15px;">
                                         Delete
                                     </button>
                                 </form>
@@ -289,12 +289,14 @@
     </div>
 
     <!-- Map Section -->
-    <div class="col-8 offset-3 mb-3">
+    <div class="col-12 col-md-10 offset-md-1 col-lg-8 offset-lg-2 mb-3">
         <h3>Where you'll be staying</h3>
         <div id="map"></div>
     </div>
    
 </div>
+
+<%- include("../includes/razorpayModal.ejs") %>
 
 <script src="/js/map.js"></script>
 
@@ -302,6 +304,7 @@
     (() => {
         const checkIn = document.getElementById("checkInInput");
         const checkOut = document.getElementById("checkOutInput");
+        const guestsInput = document.getElementById("guestsInput");
         const pricingBreakdown = document.getElementById("pricingBreakdown");
         const nightlyCalcLabel = document.getElementById("nightlyCalcLabel");
         const basePriceLabel = document.getElementById("basePriceLabel");
@@ -309,6 +312,7 @@
         const totalPriceLabel = document.getElementById("totalPriceLabel");
         const reserveBtn = document.getElementById("reserveBtn");
         const availabilityAlert = document.getElementById("availabilityAlert");
+        const bookingForm = document.getElementById("bookingForm");
 
         const nightlyPrice = Number(listing.price) || 0;
 
@@ -384,5 +388,122 @@
         });
 
         checkOut.addEventListener("change", updateBookingDetails);
+
+        // Interactive Razorpay Checkout Flow (Sample / Demo Mode)
+        bookingForm.addEventListener("submit", async (e) => {
+            if (!window.isLoggedInUser) {
+                // Not logged in: allow normal submit to let isLoggedIn redirect to /login
+                return;
+            }
+
+            e.preventDefault();
+            availabilityAlert.style.display = "none";
+
+            const origBtnHtml = reserveBtn.innerHTML;
+            reserveBtn.disabled = true;
+            reserveBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Opening Razorpay Gateway...`;
+
+            try {
+                const response = await fetch("/listings/<%= listing._id %>/bookings", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({
+                        booking: {
+                            checkIn: checkIn.value,
+                            checkOut: checkOut.value,
+                            guests: guestsInput.value
+                        },
+                        isAjax: true
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    availabilityAlert.innerText = data.message || "Unable to proceed with booking.";
+                    availabilityAlert.style.display = "block";
+                    reserveBtn.disabled = false;
+                    reserveBtn.innerHTML = origBtnHtml;
+                    return;
+                }
+
+                // Populate and launch simulated Razorpay Modal
+                document.getElementById("rzpModalPropTitle").innerText = data.propertyTitle || "Property Reservation";
+                document.getElementById("rzpModalRef").innerText = `Ref: ${data.bookingReference}`;
+                document.getElementById("rzpModalAmount").innerText = `₹ ${Number(data.totalPrice).toLocaleString("en-IN")}`;
+                document.getElementById("rzpSimAlert").style.display = "none";
+
+                reserveBtn.disabled = false;
+                reserveBtn.innerHTML = origBtnHtml;
+
+                const simModalEl = document.getElementById("razorpaySimModal");
+                const simModal = new bootstrap.Modal(simModalEl);
+                simModal.show();
+
+                const payBtn = document.getElementById("rzpSimPayBtn");
+                const failBtn = document.getElementById("rzpSimFailBtn");
+                const alertBox = document.getElementById("rzpSimAlert");
+
+                // Replace buttons with clean clones to avoid duplicated event listeners
+                const newPayBtn = payBtn.cloneNode(true);
+                payBtn.parentNode.replaceChild(newPayBtn, payBtn);
+
+                const newFailBtn = failBtn.cloneNode(true);
+                failBtn.parentNode.replaceChild(newFailBtn, failBtn);
+
+                newPayBtn.addEventListener("click", async () => {
+                    alertBox.style.display = "none";
+                    newPayBtn.disabled = true;
+                    newPayBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing Razorpay Payment...`;
+
+                    try {
+                        const verifyRes = await fetch(`/bookings/${data.bookingId}/verify-payment`, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Accept": "application/json"
+                            },
+                            body: JSON.stringify({
+                                razorpay_order_id: data.orderId,
+                                razorpay_payment_id: "pay_test_" + Date.now().toString(36),
+                                razorpay_signature: "simulated_razorpay_success",
+                                isAjax: true
+                            })
+                        });
+
+                        const verifyData = await verifyRes.json();
+                        if (verifyData.success) {
+                            newPayBtn.innerHTML = `<i class="fa-solid fa-circle-check me-2 text-white"></i>Payment Verified!`;
+                            setTimeout(() => {
+                                window.location.href = verifyData.redirectUrl || `/bookings/${data.bookingId}`;
+                            }, 500);
+                        } else {
+                            alertBox.innerText = verifyData.message || "Payment verification failed.";
+                            alertBox.style.display = "block";
+                            newPayBtn.disabled = false;
+                            newPayBtn.innerHTML = `<i class="fa-solid fa-lock me-1"></i> Pay Now (Instant Confirmation)`;
+                        }
+                    } catch (vErr) {
+                        alertBox.innerText = "Error verifying payment signature. Please check My Bookings.";
+                        alertBox.style.display = "block";
+                        newPayBtn.disabled = false;
+                        newPayBtn.innerHTML = `<i class="fa-solid fa-lock me-1"></i> Pay Now (Instant Confirmation)`;
+                    }
+                });
+
+                newFailBtn.addEventListener("click", () => {
+                    alertBox.innerText = "Payment failed: Test card declined or cancelled in simulation.";
+                    alertBox.style.display = "block";
+                });
+            } catch (err) {
+                availabilityAlert.innerText = "Server error while creating reservation. Please try again.";
+                availabilityAlert.style.display = "block";
+                reserveBtn.disabled = false;
+                reserveBtn.innerHTML = origBtnHtml;
+            }
+        });
     })();
 </script>

@@ -60,14 +60,27 @@ const bookingSchema = new Schema(
         },
         status: {
             type: String,
-            enum: ["confirmed", "cancelled"],
-            default: "confirmed",
+            enum: ["pending", "confirmed", "cancelled"],
+            default: "pending",
             index: true,
         },
         paymentStatus: {
             type: String,
-            enum: ["pending", "paid", "unpaid", "refunded"],
+            enum: ["pending", "paid", "unpaid", "refunded", "failed"],
             default: "pending",
+        },
+        razorpayOrderId: {
+            type: String,
+            index: true,
+        },
+        razorpayPaymentId: {
+            type: String,
+        },
+        razorpaySignature: {
+            type: String,
+        },
+        paidAt: {
+            type: Date,
         },
     },
     {
@@ -80,4 +93,3 @@ bookingSchema.index({ user: 1, createdAt: -1 });
 
 const Booking = mongoose.model("Booking", bookingSchema);
 module.exports = Booking;
-

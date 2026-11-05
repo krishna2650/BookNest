@@ -106,6 +106,9 @@ app.use((req, res, next) => {
 
 app.use((err, req, res, next) => {
     let { statusCode = 500, message = "Something went wrong!" } = err;
+    if (!res.locals.currUser) res.locals.currUser = req.user || null;
+    if (!res.locals.success) res.locals.success = [];
+    if (!res.locals.error) res.locals.error = [];
     res.status(statusCode).render("error.ejs", { message });
 });
 

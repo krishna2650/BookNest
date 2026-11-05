@@ -52,6 +52,8 @@ module.exports.dashboard = async (req, res) => {
 
         if (b.status === "cancelled") {
             cancelledBookings.push(b);
+        } else if (b.status === "pending") {
+            // Awaiting payment verification, not yet confirmed
         } else if (checkIn <= now && checkOut >= now) {
             currentStays.push(b);
             upcomingBookings.push(b);

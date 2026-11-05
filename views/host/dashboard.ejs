@@ -147,7 +147,13 @@
                                         </td>
                                         <td>
                                             <div class="fw-bold text-danger">&#8377; <%= b.totalPrice.toLocaleString("en-IN") %></div>
-                                            <div class="text-muted small">Payment: <%= b.paymentStatus %></div>
+                                            <% if (b.paymentStatus === 'paid') { %>
+                                                <span class="badge bg-success" style="font-size: 0.72rem;"><i class="fa-solid fa-shield-halved me-1"></i> Paid</span>
+                                            <% } else if (b.paymentStatus === 'refunded') { %>
+                                                <span class="badge bg-info text-dark" style="font-size: 0.72rem;">Refunded</span>
+                                            <% } else { %>
+                                                <span class="badge bg-warning text-dark" style="font-size: 0.72rem;">Pending</span>
+                                            <% } %>
                                         </td>
                                         <td>
                                             <span class="badge <%= b.status === 'confirmed' ? 'bg-success' : 'bg-secondary' %> text-uppercase">

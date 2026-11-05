@@ -7,17 +7,49 @@
 %>
 
 <div class="row mt-4 mb-5">
-    <div class="col-8 offset-2">
-        <!-- Success Banner -->
-        <div class="alert alert-success d-flex align-items-center mb-4" role="alert" style="border-radius: 12px;">
-            <i class="fa-solid fa-circle-check fs-3 me-3 text-success"></i>
-            <div>
-                <h5 class="alert-heading mb-1">Reservation Confirmed!</h5>
-                <p class="mb-0 small text-muted">
-                    Your booking reference is <strong><%= booking.bookingReference %></strong>. A confirmation has been sent to your registered email.
-                </p>
+    <div class="col-12 col-md-10 offset-md-1 col-lg-8 offset-lg-2">
+        <!-- Status Banner -->
+        <% if (booking.status === 'confirmed' && booking.paymentStatus === 'paid') { %>
+            <div class="alert alert-success d-flex align-items-center mb-4" role="alert" style="border-radius: 12px;">
+                <i class="fa-solid fa-circle-check fs-3 me-3 text-success"></i>
+                <div>
+                    <h5 class="alert-heading mb-1">Reservation Confirmed & Paid!</h5>
+                    <p class="mb-0 small text-muted">
+                        Payment was verified via Razorpay. Your booking reference is <strong><%= booking.bookingReference %></strong>.
+                    </p>
+                </div>
             </div>
-        </div>
+        <% } else if (booking.status === 'confirmed') { %>
+            <div class="alert alert-warning d-flex align-items-center mb-4" role="alert" style="border-radius: 12px;">
+                <i class="fa-solid fa-clock fs-3 me-3 text-warning"></i>
+                <div>
+                    <h5 class="alert-heading mb-1">Reservation Confirmed</h5>
+                    <p class="mb-0 small text-muted">
+                        Your booking reference is <strong><%= booking.bookingReference %></strong>.
+                    </p>
+                </div>
+            </div>
+        <% } else if (booking.status === 'pending') { %>
+            <div class="alert alert-warning d-flex align-items-center mb-4" role="alert" style="border-radius: 12px;">
+                <i class="fa-solid fa-circle-exclamation fs-3 me-3 text-warning"></i>
+                <div>
+                    <h5 class="alert-heading mb-1">Payment Pending</h5>
+                    <p class="mb-0 small text-muted">
+                        Please complete your payment via Razorpay to confirm your dates. Booking Reference: <strong><%= booking.bookingReference %></strong>.
+                    </p>
+                </div>
+            </div>
+        <% } else { %>
+            <div class="alert alert-secondary d-flex align-items-center mb-4" role="alert" style="border-radius: 12px;">
+                <i class="fa-solid fa-ban fs-3 me-3 text-secondary"></i>
+                <div>
+                    <h5 class="alert-heading mb-1">Reservation Cancelled</h5>
+                    <p class="mb-0 small text-muted">
+                        This reservation has been cancelled. Reference: <strong><%= booking.bookingReference %></strong>.
+                    </p>
+                </div>
+            </div>
+        <% } %>
 
         <!-- Main Confirmation Card -->
         <div class="card shadow-sm border-0" style="border-radius: 1rem; overflow: hidden; background: #fff;">
@@ -26,26 +58,35 @@
                 <div>
                     <% if (booking.status === 'confirmed') { %>
                         <span class="badge bg-success px-3 py-2 text-uppercase">Confirmed</span>
+                    <% } else if (booking.status === 'pending') { %>
+                        <span class="badge bg-warning text-dark px-3 py-2 text-uppercase">Pending</span>
                     <% } else { %>
                         <span class="badge bg-secondary px-3 py-2 text-uppercase">Cancelled</span>
                     <% } %>
-                    <span class="badge bg-warning text-dark px-3 py-2 text-uppercase ms-1">
-                        <%= booking.paymentStatus === 'paid' ? 'Paid' : 'Pay at property' %>
-                    </span>
+
+                    <% if (booking.paymentStatus === 'paid') { %>
+                        <span class="badge bg-success px-3 py-2 text-uppercase ms-1"><i class="fa-solid fa-shield-halved me-1"></i> Paid</span>
+                    <% } else if (booking.paymentStatus === 'refunded') { %>
+                        <span class="badge bg-info text-dark px-3 py-2 text-uppercase ms-1">Refunded</span>
+                    <% } else if (booking.paymentStatus === 'failed') { %>
+                        <span class="badge bg-danger px-3 py-2 text-uppercase ms-1">Failed</span>
+                    <% } else { %>
+                        <span class="badge bg-warning text-dark px-3 py-2 text-uppercase ms-1">Unpaid</span>
+                    <% } %>
                 </div>
             </div>
 
             <div class="card-body p-4">
                 <div class="row">
                     <!-- Property Info -->
-                    <div class="col-md-5 mb-3 mb-md-0">
+                    <div class="col-12 col-md-5 mb-4 mb-md-0">
                         <% if (booking.listing && booking.listing.image) { %>
                             <img src="<%= booking.listing.image.url %>" 
                                  alt="<%= booking.listing.title %>" 
                                  class="img-fluid rounded mb-3" 
                                  style="height: 200px; width: 100%; object-fit: cover;">
                         <% } %>
-                        <h4><%= booking.listing ? booking.listing.title : 'Property' %></h4>
+                        <h4 class="fw-bold"><%= booking.listing ? booking.listing.title : 'Property' %></h4>
                         <p class="text-muted mb-1">
                             <i class="fa-solid fa-location-dot me-1 text-danger"></i>
                             <%= booking.listing ? booking.listing.location : '' %>, <%= booking.listing ? booking.listing.country : '' %>
@@ -58,7 +99,7 @@
                     </div>
 
                     <!-- Reservation Summary & Price Breakdown -->
-                    <div class="col-md-7 ps-md-4 border-start">
+                    <div class="col-12 col-md-7 ps-md-4 border-start">
                         <h5 class="fw-bold mb-3">Reservation Summary</h5>
 
                         <div class="row g-2 mb-3">
@@ -81,6 +122,12 @@
                             <i class="fa-solid fa-moon ms-2 me-1"></i> Duration: <strong><%= booking.nights %> <%= booking.nights === 1 ? 'night' : 'nights' %></strong>
                         </p>
 
+                        <% if (booking.razorpayPaymentId) { %>
+                            <div class="p-2 mb-3 rounded bg-light border small text-muted">
+                                <i class="fa-solid fa-receipt text-success me-1"></i> Razorpay Payment ID: <strong><%= booking.razorpayPaymentId %></strong>
+                            </div>
+                        <% } %>
+
                         <h6 class="fw-bold mb-2">Price Breakdown</h6>
                         <div class="d-flex justify-content-between text-muted small mb-1">
                             <span>&#8377; <%= booking.nightlyPrice.toLocaleString("en-IN") %> x <%= booking.nights %> nights</span>
@@ -98,6 +145,12 @@
 
                         <!-- Action Buttons -->
                         <div class="d-flex flex-wrap gap-2">
+                            <% if (booking.status === 'pending' || booking.paymentStatus === 'pending') { %>
+                                <a href="/bookings/<%= booking._id %>/checkout" class="btn btn-danger" style="background-color: #fe424d; border-radius: 25px;">
+                                    <i class="fa-solid fa-credit-card me-1"></i> Complete Payment Now
+                                </a>
+                            <% } %>
+
                             <a href="/messages/<%= booking._id %>" class="btn btn-outline-dark" style="border-radius: 25px;">
                                 <i class="fa-regular fa-comment-dots me-1"></i> Message Host
                             </a>
@@ -119,9 +172,8 @@
             </div>
             <div class="card-footer bg-light text-muted small py-3 px-4">
                 <i class="fa-solid fa-circle-info me-1"></i>
-                <strong>Cancellation Policy:</strong> Free cancellation is available anytime before your scheduled check-in date. Payment is due upon arrival at the property.
+                <strong>Cancellation & Refund Policy:</strong> Free cancellation is available anytime before your scheduled check-in date. Paid bookings will be refunded to the original payment source.
             </div>
         </div>
     </div>
 </div>
-
