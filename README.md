@@ -60,7 +60,6 @@ A full-stack room & stay booking platform built with the **MERN** stack.
 | Filters | Become a Host |
 |:---:|:---:|
 | ![Filters](./screenshots/filters.png) | ![Host](./screenshots/host.png) |
-
 ---
 
 ## 🚀 Getting Started
