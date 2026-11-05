@@ -47,19 +47,7 @@ A full-stack room & stay booking platform built with the **MERN** stack.
 | **Database** | MongoDB with Mongoose, hosted on MongoDB Atlas |
 | **Deployment** | Render |
 
----
 
-## 📸 Screenshots
-
-<!-- Add your screenshots to a /screenshots folder and update the paths below -->
-
-| Home / Listings | Listing Details |
-|:---:|:---:|
-| ![Listings](./screenshots/listings.png) | ![Details](./screenshots/details.png) |
-
-| Filters | Become a Host |
-|:---:|:---:|
-| ![Filters](./screenshots/filters.png) | ![Host](./screenshots/host.png) |
 ---
 
 ## 🚀 Getting Started
